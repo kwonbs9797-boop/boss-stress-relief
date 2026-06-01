@@ -165,18 +165,27 @@ for k, v in {
 # ════════════════════════════════════════
 # 헤더
 # ════════════════════════════════════════
-st.markdown("""
-<div style="text-align:center; padding: 1.5rem 0 0.5rem; border-bottom: 1px solid #3a1818; margin-bottom:1rem;">
-  <h1 style="font-family:'Black Han Sans',sans-serif; color:#ff4444;
-             font-size:2.2rem; letter-spacing:2px;
-             text-shadow: 0 0 30px rgba(255,68,68,0.35); margin:0;">
-    😤 상사 처단 센터
-  </h1>
-  <p style="color:#c49a9a; font-size:0.9rem; margin-top:0.4rem;">
-    직장인의 마음의 평화를 위한 가상 스트레스 해소 공간
-  </p>
-</div>
-""", unsafe_allow_html=True)
+col_title, col_logout = st.columns([6, 1])
+with col_title:
+    st.markdown("""
+    <div style="text-align:center; padding: 1.5rem 0 0.5rem; border-bottom: 1px solid #3a1818; margin-bottom:1rem;">
+      <h1 style="font-family:'Black Han Sans',sans-serif; color:#ff4444;
+                 font-size:2.2rem; letter-spacing:2px;
+                 text-shadow: 0 0 30px rgba(255,68,68,0.35); margin:0;">
+        😤 상사 처단 센터
+      </h1>
+      <p style="color:#c49a9a; font-size:0.9rem; margin-top:0.4rem;">
+        직장인의 마음의 평화를 위한 가상 스트레스 해소 공간
+      </p>
+    </div>
+    """, unsafe_allow_html=True)
+with col_logout:
+    st.markdown("<div style='padding-top:1.2rem;'>", unsafe_allow_html=True)
+    if st.button("🚪 로그아웃", use_container_width=True):
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ════════════════════════════════════════
 # 탭
