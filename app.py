@@ -204,22 +204,15 @@ with tab1:
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown("""
-        <p style="font-size:0.8rem; color:#c49a9a; margin-bottom:0.8rem;">
-          💡 <b>대화하기</b> 탭에서 AI 스트리밍 응답을 사용하려면
-          <a href="https://console.anthropic.com/settings/keys" style="color:#ff4444;"
-             target="_blank">Anthropic API 키</a>가 필요합니다.
-          키는 세션 메모리에만 저장되며 서버에 보관되지 않습니다.
-        </p>
-        """, unsafe_allow_html=True)
-
-    api_key_val = st.text_input(
-        "🔑 API Key",
-        type="password",
-        placeholder="sk-ant-...",
-        value=st.session_state.api_key,
-    )
-    st.session_state.api_key = api_key_val
+        # secrets에 키 없을 때만 입력란 표시
+        api_key_val = st.text_input(
+            "🔑 API Key",
+            type="password",
+            placeholder="sk-ant-...",
+            value=st.session_state.api_key,
+        )
+        st.session_state.api_key = api_key_val
+        st.caption("키는 세션 메모리에만 저장되며 서버에 보관되지 않습니다.")
 
     st.divider()
 
