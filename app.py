@@ -196,24 +196,6 @@ tab1, tab2, tab3 = st.tabs(["👤 상사 설정", "🔥 고문하기", "💬 대
 # TAB 1 — 상사 설정
 # ────────────────────────────────────────
 with tab1:
-    if _default_api_key:
-        st.markdown("""
-        <div style="background:#1a2a1a;border:1px solid #2a5a2a;border-radius:10px;
-                    padding:.6rem 1rem;margin-bottom:.8rem;font-size:.85rem;color:#7ecf7e;">
-          ✅ API 키가 secrets.toml에서 자동으로 로드됐습니다. 바로 대화하기 탭을 사용할 수 있어요.
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        # secrets에 키 없을 때만 입력란 표시
-        api_key_val = st.text_input(
-            "🔑 API Key",
-            type="password",
-            placeholder="sk-ant-...",
-            value=st.session_state.api_key,
-        )
-        st.session_state.api_key = api_key_val
-        st.caption("키는 세션 메모리에만 저장되며 서버에 보관되지 않습니다.")
-
     st.divider()
 
     st.markdown("#### 📸 상사 얼굴 사진")
