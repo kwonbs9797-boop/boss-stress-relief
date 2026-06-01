@@ -927,20 +927,13 @@ with tab3:
 
             with st.chat_message("assistant", avatar="😈"):
                 try:
+                    api_key = get_api_key()
+                    if not api_key:
+                        st.error("❌ API 키가 설정되지 않았습니다. Streamlit Cloud → Settings → Secrets에 `anthropic_api_key`를 추가해주세요.")
+                        st.stop()
                     response_text = st.write_stream(stream_boss())
                     st.session_state.chat_history.append(
                         {"role": "assistant", "content": response_text}
                     )
                 except Exception as e:
-                    fallbacks = [
-                        "야!! 나한테 그런 말 하면 어떡해!!",
-                        "...그, 그건 내가 좀 심했나... 어쨌든 네 탓이야!!",
-                        "흥!! 말도 안 돼!! 보고서나 다시 써!!",
-                        "그래도 상사한테... 어, 어어... 할 말 없네.",
-                    ]
-                    import random
-                    fallback = random.choice(fallbacks)
-                    st.write(fallback)
-                    st.session_state.chat_history.append(
-                        {"role": "assistant", "content": fallback}
-                    )
+                    st.error(f"⚠️ API 오류: {e}")
