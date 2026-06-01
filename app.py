@@ -272,299 +272,522 @@ with tab2:
         </div>
         """, unsafe_allow_html=True)
     else:
-        boss_name_safe = st.session_state.boss_name.replace("'", "\\'").replace("`", "\\`")
+        boss_name_safe = (st.session_state.boss_name or "최종 보스").replace("'","\\'").replace("`","\\`")
         img_data = st.session_state.boss_img_b64 or ""
-        boss_img_tag = f'<img src="{img_data}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' if img_data else ""
+        boss_img_css = f'background-image:url("{img_data}");background-size:cover;background-position:center;' if img_data else ""
 
         game_html = f"""<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
 *{{box-sizing:border-box;margin:0;padding:0;}}
-body{{font-family:'Noto Sans KR',sans-serif;background:#0d0d1a;color:#f0eeff;padding:.8rem;overflow-x:hidden;}}
+body{{font-family:'Noto Sans KR',sans-serif;background:#1a0e2e;color:#f0eaff;padding:.7rem;overflow-x:hidden;}}
 
-/* 스탯 바 */
-.stats-row{{display:flex;gap:.6rem;margin-bottom:.8rem;}}
-.stat-box{{flex:1;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:.6rem;text-align:center;}}
-.stat-val{{font-family:'Black Han Sans',sans-serif;font-size:1.4rem;color:#a78bfa;}}
-.stat-lbl{{font-size:.7rem;color:#6b6b9a;margin-top:.1rem;}}
+/* ── 월드 ── */
+.world{{
+  position:relative;width:100%;height:260px;border-radius:16px;overflow:hidden;
+  border:3px solid #c89820;box-shadow:0 4px 24px rgba(200,152,32,.3);
+  margin-bottom:.7rem;
+}}
+.sky{{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg,#1a3a6b 0%,#2a5fa0 40%,#4a8fd4 65%,#6aafe4 72%);
+}}
+/* 구름 */
+.cloud{{position:absolute;background:rgba(255,255,255,.85);border-radius:50px;}}
+.cloud::before,.cloud::after{{content:'';position:absolute;background:rgba(255,255,255,.85);border-radius:50%;}}
+.c1{{width:70px;height:22px;top:18%;left:5%;animation:drift 18s linear infinite;}}
+.c1::before{{width:32px;height:32px;top:-14px;left:10px;}}
+.c1::after{{width:24px;height:24px;top:-10px;left:34px;}}
+.c2{{width:55px;height:18px;top:12%;left:40%;animation:drift 25s linear infinite 5s;}}
+.c2::before{{width:26px;height:26px;top:-12px;left:8px;}}
+.c2::after{{width:20px;height:20px;top:-8px;left:28px;}}
+.c3{{width:80px;height:24px;top:22%;left:70%;animation:drift 20s linear infinite 10s;}}
+.c3::before{{width:36px;height:36px;top:-16px;left:12px;}}
+.c3::after{{width:26px;height:26px;top:-12px;left:40px;}}
+@keyframes drift{{from{{transform:translateX(0)}}to{{transform:translateX(-110vw)}}}}
 
-/* 스테이지 뱃지 */
-.stage-badge{{text-align:center;margin-bottom:.4rem;font-size:.8rem;color:#6b6b9a;letter-spacing:2px;text-transform:uppercase;}}
+/* 배경 나무 */
+.bg-trees{{
+  position:absolute;bottom:28%;left:0;right:0;
+  font-size:2.2rem;letter-spacing:4px;opacity:.5;
+  text-align:left;padding-left:4px;pointer-events:none;
+}}
 
-/* HP 바 */
-.hp-wrap{{background:#1a1a2e;border-radius:12px;padding:.8rem 1rem;margin-bottom:.8rem;border:1px solid #2a2a4a;}}
-.hp-header{{display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem;}}
-.hp-name{{font-family:'Black Han Sans',sans-serif;font-size:1rem;color:#f0eeff;}}
-.hp-text{{font-size:.85rem;color:#a78bfa;font-weight:700;}}
-.hp-bg{{height:18px;background:#0d0d1a;border-radius:9px;overflow:hidden;}}
-.hp-fill{{height:100%;border-radius:9px;transition:width .25s ease;background:linear-gradient(90deg,#7c3aed,#a78bfa);}}
-.hp-fill.danger{{background:linear-gradient(90deg,#dc2626,#ef4444);}}
-.hp-fill.warning{{background:linear-gradient(90deg,#d97706,#f59e0b);}}
+/* 땅 */
+.ground{{
+  position:absolute;bottom:0;left:0;right:0;height:28%;
+  background:linear-gradient(180deg,#5aaf32 0%,#3d8a1e 25%,#2d6a16 100%);
+}}
+.ground::before{{
+  content:'';position:absolute;top:0;left:0;right:0;height:7px;
+  background:linear-gradient(90deg,#6dd43a 0%,#7ee844 50%,#6dd43a 100%);
+  border-radius:3px;
+}}
+/* 잔디 블록 패턴 */
+.ground::after{{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:repeating-linear-gradient(90deg,transparent,transparent 40px,rgba(0,0,0,.06) 40px,rgba(0,0,0,.06) 41px);
+}}
 
-/* 몬스터 영역 */
-.monster-arena{{position:relative;width:220px;height:220px;margin:0 auto .6rem;display:flex;align-items:center;justify-content:center;}}
-.monster-ring{{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,#1a1040 60%,transparent 100%);}}
-.monster-glow{{position:absolute;inset:10px;border-radius:50%;box-shadow:0 0 40px rgba(167,139,250,0.3);animation:pulseGlow 2s ease-in-out infinite;}}
-@keyframes pulseGlow{{0%,100%{{box-shadow:0 0 30px rgba(167,139,250,.2);}}50%{{box-shadow:0 0 60px rgba(167,139,250,.5);}}}}
-.monster-body{{position:relative;z-index:3;width:150px;height:150px;border-radius:50%;background:#1a1040;border:3px solid #7c3aed;display:flex;align-items:center;justify-content:center;font-size:5rem;cursor:pointer;user-select:none;transition:transform .08s;overflow:hidden;}}
-.monster-body:active{{transform:scale(.85);}}
-.monster-body.boss-mode{{border-color:#dc2626;box-shadow:0 0 25px rgba(220,38,38,.5);}}
+/* ── 플레이어 ── */
+.player{{
+  position:absolute;bottom:28%;left:30px;
+  font-size:3rem;z-index:10;
+  filter:drop-shadow(2px 4px 4px rgba(0,0,0,.5));
+  animation:idle 1s ease-in-out infinite;
+  transform-origin:bottom center;
+  transition:left .25s ease;
+  cursor:default;user-select:none;
+}}
+@keyframes idle{{0%,100%{{transform:translateY(0) scaleY(1);}}50%{{transform:translateY(-5px) scaleY(1.04);}}}}
+.player.attack{{animation:lunge .35s ease forwards;}}
+@keyframes lunge{{
+  0%{{transform:translateX(0) scaleX(1);}}
+  45%{{transform:translateX(90px) scaleX(1.15) scaleY(.9);}}
+  70%{{transform:translateX(75px) scaleX(.9) scaleY(1.05);}}
+  100%{{transform:translateX(0) scaleX(1);}}
+}}
+
+/* ── 몬스터 영역 ── */
+.monster-zone{{
+  position:absolute;bottom:28%;right:40px;
+  display:flex;flex-direction:column;align-items:center;z-index:10;
+}}
+.m-hp-outer{{
+  width:110px;height:10px;background:rgba(0,0,0,.6);
+  border-radius:5px;overflow:hidden;margin-bottom:3px;
+  border:1px solid rgba(255,255,255,.25);
+}}
+.m-hp-fill{{
+  height:100%;border-radius:5px;
+  background:linear-gradient(90deg,#ef4444,#ff6b6b);
+  transition:width .2s;
+}}
+.m-name{{
+  color:#fff;font-size:.62rem;font-weight:700;
+  text-shadow:1px 1px 3px #000;margin-bottom:3px;letter-spacing:1px;
+}}
+.m-sprite{{
+  font-size:4rem;cursor:pointer;user-select:none;
+  filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));
+  animation:mbob 1.2s ease-in-out infinite;
+  transition:transform .08s;
+}}
+.m-sprite:active{{transform:scale(.82);}}
+@keyframes mbob{{0%,100%{{transform:translateY(0);}}50%{{transform:translateY(-9px);}}}}
+.m-sprite.hit{{animation:mhit .35s ease;}}
+@keyframes mhit{{
+  0%,100%{{transform:translateX(0);filter:drop-shadow(0 4px 8px rgba(0,0,0,.6));}}
+  25%{{transform:translateX(14px);filter:drop-shadow(0 0 18px #ff4444) brightness(2.2);}}
+  55%{{transform:translateX(-9px);filter:drop-shadow(0 0 12px #ff8888);}}
+  75%{{transform:translateX(6px);}}
+}}
+
+/* 보스 이미지 모드 */
+.m-sprite.boss-img{{
+  width:90px;height:90px;border-radius:50%;
+  border:3px solid #dc2626;
+  box-shadow:0 0 24px rgba(220,38,38,.6);
+  overflow:hidden;font-size:0;
+  {boss_img_css}
+}}
 
 /* 데미지 숫자 */
-.dmg-pop{{position:absolute;font-family:'Black Han Sans',sans-serif;font-size:1.6rem;font-weight:900;pointer-events:none;z-index:20;animation:dmgFloat .8s forwards;}}
-.dmg-pop.crit{{font-size:2.2rem;color:#fbbf24;}}
-.dmg-pop.normal{{color:#a78bfa;}}
-@keyframes dmgFloat{{
-  0%{{opacity:1;transform:translateY(0) scale(.8);}}
-  40%{{opacity:1;transform:translateY(-40px) scale(1.2);}}
-  100%{{opacity:0;transform:translateY(-80px) scale(.9);}}
+.dmg{{
+  position:absolute;font-family:'Black Han Sans',sans-serif;font-weight:900;
+  pointer-events:none;z-index:50;
+  text-shadow:2px 2px 0 #000,-1px -1px 0 #000;
+  animation:dmgup .9s forwards;
+}}
+.dmg.n{{font-size:1.4rem;color:#fff;}}
+.dmg.c{{font-size:1.9rem;color:#ffdd00;}}
+@keyframes dmgup{{
+  0%{{opacity:1;transform:translateY(0) scale(.7);}}
+  35%{{opacity:1;transform:translateY(-35px) scale(1.25);}}
+  100%{{opacity:0;transform:translateY(-75px) scale(.95);}}
 }}
 
-/* 몬스터 반응 */
-.monster-say{{background:#1a1a2e;border-radius:12px;padding:.7rem 1rem;text-align:center;border-left:3px solid #7c3aed;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:.9rem;margin-bottom:.8rem;color:#d4c8ff;}}
-
-/* 스킬 버튼 */
-.skills-grid{{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;}}
-.skill-btn{{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:14px;padding:.75rem .4rem;cursor:pointer;text-align:center;transition:all .15s;}}
-.skill-btn:hover{{background:#25254a;border-color:#7c3aed;transform:scale(1.06);}}
-.skill-btn:active{{transform:scale(.93);}}
-.skill-icon{{font-size:1.7rem;display:block;margin-bottom:.2rem;}}
-.skill-name{{font-size:.7rem;color:#6b6b9a;}}
-.skill-dmg{{font-size:.75rem;color:#a78bfa;font-weight:700;margin-top:.1rem;}}
-
-/* 클리어 오버레이 */
-.clear-overlay{{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}}
-.clear-overlay.show{{display:flex;animation:fadeIn .3s;}}
-@keyframes fadeIn{{from{{opacity:0}}to{{opacity:1}}}}
-.clear-emoji{{font-size:5rem;animation:bounce .6s infinite alternate;}}
-@keyframes bounce{{from{{transform:translateY(0)}}to{{transform:translateY(-20px)}}}}
-.clear-title{{font-family:'Black Han Sans',sans-serif;font-size:2rem;color:#fbbf24;letter-spacing:3px;text-shadow:0 0 20px rgba(251,191,36,.6);}}
-.clear-sub{{color:#a78bfa;font-size:1rem;}}
-.next-btn{{background:#7c3aed;color:#fff;border:none;border-radius:14px;padding:.8rem 2.5rem;font-family:'Black Han Sans',sans-serif;font-size:1.1rem;cursor:pointer;letter-spacing:2px;transition:all .2s;margin-top:.5rem;}}
-.next-btn:hover{{background:#6d28d9;transform:scale(1.05);}}
-
-/* 쉐이크 */
-@keyframes shakeAnim{{
-  0%,100%{{transform:translateX(0) rotate(0);}}
-  20%{{transform:translateX(-10px) rotate(-4deg);}}
-  40%{{transform:translateX(10px) rotate(4deg);}}
-  60%{{transform:translateX(-6px) rotate(-2deg);}}
-  80%{{transform:translateX(6px) rotate(2deg);}}
+/* 드롭 아이템 */
+.loot{{
+  position:absolute;font-size:1.1rem;pointer-events:none;
+  animation:lootfall 1.4s forwards;z-index:25;
 }}
-.shake{{animation:shakeAnim .35s ease-in-out;}}
+@keyframes lootfall{{
+  0%{{opacity:1;transform:translateY(-15px) rotate(0);}}
+  60%{{opacity:1;transform:translateY(18px) rotate(200deg);}}
+  100%{{opacity:0;transform:translateY(28px) rotate(300deg);}}
+}}
 
-/* 올클리어 */
-.allclear{{display:none;position:fixed;inset:0;background:linear-gradient(135deg,#0d0d1a,#1a0a2e);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:1.2rem;text-align:center;}}
-.allclear.show{{display:flex;animation:fadeIn .5s;}}
-.allclear-stars{{font-size:3rem;letter-spacing:.5rem;}}
-.allclear-title{{font-family:'Black Han Sans',sans-serif;font-size:2.5rem;color:#fbbf24;letter-spacing:4px;text-shadow:0 0 30px rgba(251,191,36,.8);}}
-.allclear-score{{font-size:1.2rem;color:#a78bfa;}}
-.replay-btn{{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;border:none;border-radius:16px;padding:1rem 3rem;font-family:'Black Han Sans',sans-serif;font-size:1.2rem;cursor:pointer;letter-spacing:2px;margin-top:.5rem;}}
+/* ── 스테이지 뱃지 ── */
+.stage-row{{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:.6rem;
+}}
+.stage-txt{{
+  font-size:.75rem;color:#c89820;letter-spacing:3px;font-weight:700;
+}}
+
+/* ── 플레이어 스탯 ── */
+.pstat{{
+  background:rgba(0,0,0,.6);border:2px solid #c89820;border-radius:12px;
+  padding:.55rem 1rem;display:flex;align-items:center;gap:.8rem;
+  margin-bottom:.6rem;
+}}
+.lv-badge{{
+  background:linear-gradient(135deg,#b8860b,#ffd700);color:#000;
+  font-family:'Black Han Sans',sans-serif;font-size:.85rem;
+  padding:.25rem .65rem;border-radius:20px;white-space:nowrap;min-width:48px;text-align:center;
+}}
+.exp-area{{flex:1;}}
+.exp-lbl{{font-size:.6rem;color:#888;margin-bottom:2px;}}
+.exp-bg{{height:7px;background:#111;border-radius:4px;overflow:hidden;}}
+.exp-fill{{height:100%;background:linear-gradient(90deg,#4ade80,#22d3ee);border-radius:4px;transition:width .5s;}}
+.hp-area{{display:flex;flex-direction:column;align-items:flex-end;}}
+.hp-lbl{{font-size:.6rem;color:#f87171;margin-bottom:2px;}}
+.hp-row{{display:flex;gap:.3rem;font-size:.8rem;}}
+
+/* ── 스탯 박스 ── */
+.stats-row{{display:flex;gap:.5rem;margin-bottom:.6rem;}}
+.sbox{{
+  flex:1;background:rgba(0,0,0,.55);border:1px solid #c89820;
+  border-radius:10px;padding:.5rem;text-align:center;
+}}
+.sval{{font-family:'Black Han Sans',sans-serif;font-size:1.3rem;color:#ffd700;}}
+.slbl{{font-size:.65rem;color:#888;margin-top:.1rem;}}
+
+/* ── 몬스터 반응 말풍선 ── */
+.say-bubble{{
+  background:rgba(0,0,0,.65);border:1px solid #c89820;border-radius:10px;
+  padding:.55rem 1rem;text-align:center;font-size:.88rem;color:#f0eaff;
+  min-height:38px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:.6rem;
+}}
+
+/* ── 스킬 ── */
+.skills{{display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;}}
+.sk{{
+  background:linear-gradient(135deg,#1a1440,#12102e);
+  border:2px solid #c89820;border-radius:12px;
+  padding:.6rem .3rem;cursor:pointer;text-align:center;
+  transition:all .15s;position:relative;overflow:hidden;
+}}
+.sk::before{{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,215,0,.08),transparent);
+}}
+.sk:hover{{border-color:#ffd700;transform:scale(1.06);background:linear-gradient(135deg,#2a2460,#1e1c52);}}
+.sk:active{{transform:scale(.91);}}
+.sk-icon{{font-size:1.6rem;display:block;}}
+.sk-name{{font-size:.66rem;color:#ccc;margin-top:.1rem;}}
+.sk-dmg{{font-size:.7rem;color:#ffd700;font-weight:700;}}
+
+/* ── 클리어 오버레이 ── */
+.clear-ov{{
+  display:none;position:absolute;inset:0;
+  background:rgba(0,0,0,.78);z-index:100;
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:.8rem;border-radius:14px;
+}}
+.clear-ov.show{{display:flex;animation:fi .3s;}}
+@keyframes fi{{from{{opacity:0}}to{{opacity:1}}}}
+.clear-em{{font-size:4rem;animation:bnc .5s ease-in-out infinite alternate;}}
+@keyframes bnc{{from{{transform:translateY(0)}}to{{transform:translateY(-16px)}}}}
+.clear-ttl{{
+  font-family:'Black Han Sans',sans-serif;font-size:2rem;
+  color:#ffd700;letter-spacing:3px;text-shadow:0 0 24px rgba(255,215,0,.7);
+}}
+.clear-sub{{color:#ccc;font-size:.85rem;}}
+.next-btn{{
+  background:linear-gradient(135deg,#b8860b,#ffd700);color:#000;
+  border:none;border-radius:12px;padding:.65rem 2rem;
+  font-family:'Black Han Sans',sans-serif;font-size:1rem;
+  cursor:pointer;letter-spacing:2px;transition:all .2s;
+}}
+.next-btn:hover{{transform:scale(1.06);}}
+
+/* ── 올클리어 ── */
+.allclear{{
+  display:none;position:fixed;inset:0;
+  background:radial-gradient(ellipse at center,#1a0a2e 0%,#0d0a1a 100%);
+  z-index:200;align-items:center;justify-content:center;
+  flex-direction:column;gap:1rem;text-align:center;
+}}
+.allclear.show{{display:flex;animation:fi .5s;}}
+.ac-stars{{font-size:2.5rem;letter-spacing:.5rem;animation:starSpin 2s ease-in-out infinite;}}
+@keyframes starSpin{{0%,100%{{transform:scale(1);}}50%{{transform:scale(1.15);}}}}
+.ac-title{{
+  font-family:'Black Han Sans',sans-serif;font-size:2.8rem;
+  color:#ffd700;letter-spacing:5px;
+  text-shadow:0 0 30px rgba(255,215,0,.9),0 0 60px rgba(255,215,0,.4);
+}}
+.ac-score{{font-size:1.1rem;color:#a78bfa;}}
+.replay-btn{{
+  background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;
+  border:none;border-radius:16px;padding:.9rem 3rem;
+  font-family:'Black Han Sans',sans-serif;font-size:1.1rem;
+  cursor:pointer;letter-spacing:2px;transition:all .2s;margin-top:.5rem;
+}}
+.replay-btn:hover{{transform:scale(1.05);}}
 </style>
 </head>
 <body>
 
-<!-- 스탯 -->
+<!-- ══ 월드 ══ -->
+<div class="world" id="world">
+  <div class="sky"></div>
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="bg-trees">🌲🌳🌲🌳🌲🌳🌲🌳</div>
+  <div class="ground"></div>
+
+  <!-- 플레이어 -->
+  <div class="player" id="player">🧙</div>
+
+  <!-- 몬스터 -->
+  <div class="monster-zone" id="monsterZone">
+    <div class="m-hp-outer"><div class="m-hp-fill" id="mHpFill" style="width:100%"></div></div>
+    <div class="m-name" id="mName">로딩중...</div>
+    <div class="m-sprite" id="mSprite" onclick="attack(5)"></div>
+  </div>
+
+  <!-- 클리어 오버레이 -->
+  <div class="clear-ov" id="clearOv">
+    <div class="clear-em" id="clearEm">✨</div>
+    <div class="clear-ttl" id="clearTtl">처치!</div>
+    <div class="clear-sub" id="clearSub"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextMonster()">다음 몬스터 ▶</button>
+  </div>
+</div>
+
+<!-- ══ 스테이지 ══ -->
+<div class="stage-row">
+  <span class="stage-txt" id="stageTxt">STAGE 1 / 5</span>
+  <span style="font-size:.72rem;color:#888;" id="stageSubTxt"></span>
+</div>
+
+<!-- ══ 플레이어 스탯 ══ -->
+<div class="pstat">
+  <div class="lv-badge" id="lvBadge">Lv.1</div>
+  <div class="exp-area">
+    <div class="exp-lbl">EXP</div>
+    <div class="exp-bg"><div class="exp-fill" id="expFill" style="width:0%"></div></div>
+  </div>
+  <div class="hp-area">
+    <div class="hp-lbl">❤️ HP</div>
+    <div class="hp-row"><span id="playerHp" style="color:#f87171;font-weight:700;">100</span><span style="color:#666;">/100</span></div>
+  </div>
+</div>
+
+<!-- ══ 스탯 ══ -->
 <div class="stats-row">
-  <div class="stat-box"><div class="stat-val" id="totalDmg">0</div><div class="stat-lbl">총 데미지</div></div>
-  <div class="stat-box"><div class="stat-val" id="comboDisplay">0</div><div class="stat-lbl">콤보</div></div>
-  <div class="stat-box"><div class="stat-val" id="caughtCount">0</div><div class="stat-lbl">처치 수</div></div>
+  <div class="sbox"><div class="sval" id="sDmg">0</div><div class="slbl">총 데미지</div></div>
+  <div class="sbox"><div class="sval" id="sCombo">0</div><div class="slbl">콤보</div></div>
+  <div class="sbox"><div class="sval" id="sKills">0</div><div class="slbl">처치 수</div></div>
 </div>
 
-<!-- HP 바 -->
-<div class="hp-wrap">
-  <div class="hp-header">
-    <span class="hp-name" id="monsterName">로딩중...</span>
-    <span class="hp-text"><span id="hpCur">0</span> / <span id="hpMax">0</span></span>
-  </div>
-  <div class="hp-bg"><div class="hp-fill" id="hpBar" style="width:100%"></div></div>
+<!-- ══ 말풍선 ══ -->
+<div class="say-bubble" id="sayBubble">👆 몬스터를 클릭하거나 스킬을 사용하세요!</div>
+
+<!-- ══ 스킬 ══ -->
+<div class="skills">
+  <div class="sk" onclick="useSkill(15)"><span class="sk-icon">⚔️</span><span class="sk-name">참격</span><span class="sk-dmg">-15</span></div>
+  <div class="sk" onclick="useSkill(25)"><span class="sk-icon">🔥</span><span class="sk-name">화염</span><span class="sk-dmg">-25</span></div>
+  <div class="sk" onclick="useSkill(20)"><span class="sk-icon">⚡</span><span class="sk-name">번개</span><span class="sk-dmg">-20</span></div>
+  <div class="sk" onclick="useSkill(30)"><span class="sk-icon">❄️</span><span class="sk-name">빙결</span><span class="sk-dmg">-30</span></div>
+  <div class="sk" onclick="useSkill(20)"><span class="sk-icon">☄️</span><span class="sk-name">유성</span><span class="sk-dmg">-20</span></div>
+  <div class="sk" onclick="useSkill(35)"><span class="sk-icon">💥</span><span class="sk-name">폭발</span><span class="sk-dmg">-35</span></div>
+  <div class="sk" onclick="useSkill(25)"><span class="sk-icon">🌪️</span><span class="sk-name">회오리</span><span class="sk-dmg">-25</span></div>
+  <div class="sk" onclick="useSkill(50)"><span class="sk-icon">🌟</span><span class="sk-name">필살기</span><span class="sk-dmg">-50</span></div>
 </div>
 
-<!-- 스테이지 -->
-<div class="stage-badge" id="stageBadge">STAGE 1 / 5</div>
-
-<!-- 몬스터 -->
-<div class="monster-arena" id="monsterArena">
-  <div class="monster-ring"></div>
-  <div class="monster-glow"></div>
-  <div class="monster-body" id="monsterBody" onclick="attack(5)">
-    <span id="monsterEmoji">👾</span>
-  </div>
-</div>
-
-<!-- 반응 -->
-<div class="monster-say" id="monsterSay">👆 탭해서 공격하거나 아래 스킬을 사용하세요!</div>
-
-<!-- 스킬 -->
-<div class="skills-grid">
-  <div class="skill-btn" onclick="useSkill(15,'⚔️')"><span class="skill-icon">⚔️</span><span class="skill-name">참격</span><span class="skill-dmg">-15</span></div>
-  <div class="skill-btn" onclick="useSkill(25,'🔥')"><span class="skill-icon">🔥</span><span class="skill-name">화염</span><span class="skill-dmg">-25</span></div>
-  <div class="skill-btn" onclick="useSkill(20,'⚡')"><span class="skill-icon">⚡</span><span class="skill-name">번개</span><span class="skill-dmg">-20</span></div>
-  <div class="skill-btn" onclick="useSkill(30,'❄️')"><span class="skill-icon">❄️</span><span class="skill-name">빙결</span><span class="skill-dmg">-30</span></div>
-  <div class="skill-btn" onclick="useSkill(20,'☄️')"><span class="skill-icon">☄️</span><span class="skill-name">유성</span><span class="skill-dmg">-20</span></div>
-  <div class="skill-btn" onclick="useSkill(35,'💥')"><span class="skill-icon">💥</span><span class="skill-name">폭발</span><span class="skill-dmg">-35</span></div>
-  <div class="skill-btn" onclick="useSkill(25,'🌪️')"><span class="skill-icon">🌪️</span><span class="skill-name">회오리</span><span class="skill-dmg">-25</span></div>
-  <div class="skill-btn" onclick="useSkill(50,'🌟')"><span class="skill-icon">🌟</span><span class="skill-name">필살기</span><span class="skill-dmg">-50</span></div>
-</div>
-
-<!-- 처치 오버레이 -->
-<div class="clear-overlay" id="clearOverlay">
-  <div class="clear-emoji" id="clearEmoji">✨</div>
-  <div class="clear-title" id="clearTitle">처치!</div>
-  <div class="clear-sub" id="clearSub"></div>
-  <button class="next-btn" onclick="nextMonster()">다음 몬스터 ▶</button>
-</div>
-
-<!-- 올클리어 -->
+<!-- ══ 올클리어 ══ -->
 <div class="allclear" id="allClear">
-  <div class="allclear-stars">⭐⭐⭐</div>
-  <div class="allclear-title">ALL CLEAR!</div>
-  <div class="allclear-score">총 데미지: <span id="finalDmg">0</span></div>
-  <div style="color:#6b6b9a;font-size:.9rem;">직장 스트레스가 100% 해소되었습니다 🎉</div>
+  <div class="ac-stars">⭐⭐⭐⭐⭐</div>
+  <div class="ac-title">ALL CLEAR!</div>
+  <div class="ac-score">총 데미지 <span id="acDmg" style="color:#ffd700;font-weight:900;">0</span></div>
+  <div style="color:#888;font-size:.85rem;margin-top:-.3rem;">직장 스트레스 완전 해소 🎉</div>
   <button class="replay-btn" onclick="initGame()">🔄 다시 하기</button>
 </div>
 
 <script>
 const BOSS_NAME = '{boss_name_safe}';
-const BOSS_IMG  = `{boss_img_tag}`;
+const BOSS_IMG_CSS = `{boss_img_css}`;
 
 const MONSTERS = [
-  {{ name:'잔업 요괴',   emoji:'👾', hp:80,  color:'#7c3aed', says:['으아악!','왜 공격해!','살살 해!'] }},
-  {{ name:'꼰대 좀비',   emoji:'🧟', hp:130, color:'#059669', says:['으르르...','끄읍...','부하직원이!'] }},
-  {{ name:'갑질 도깨비', emoji:'👹', hp:180, color:'#dc2626', says:['감히!!','이놈!','야근해!!'] }},
-  {{ name:'초과근무 악마',emoji:'😈', hp:250, color:'#9333ea', says:['호호호...','도망 못 가!','야근 각오해!'] }},
-  {{ name:BOSS_NAME||'최종 보스', emoji:'💀', hp:400, color:'#dc2626', says:['크아아!','이럴 수가!','나를 이겨?!'], isBoss:true }},
+  {{ name:'잔업 요괴',    emoji:'🐛', hp:80,  exp:20,  says:['앗뜨거!','왜 때려!','살살 해줘요!','으앗!'] }},
+  {{ name:'꼰대 슬라임',  emoji:'🟢', hp:130, exp:35,  says:['뭐하는짓!','이놈!','네 탓이야!','끈적끈적~'] }},
+  {{ name:'갑질 도깨비',  emoji:'👹', hp:180, exp:50,  says:['감히!!','아프다!','이 직원이!','야근해!!'] }},
+  {{ name:'초과근무 악마',emoji:'👿', hp:260, exp:70,  says:['크하하!','도망 못 가!','야근 각오해!','내가 상사다!'] }},
+  {{ name:BOSS_NAME,     emoji:'💀', hp:400, exp:150, says:['크아아!','이럴 수가!','나를 이겨?!','불가능해!'], isBoss:true }},
 ];
 
-let stage=0, hp=0, maxHp=0, totalDmg=0, combo=0, caught=0, comboTimer=null, locked=false;
+const LOOTS = ['🪙','🪙','🪙','💎','⭐','🎁'];
+
+let stage=0, mHp=0, mMaxHp=0;
+let totalDmg=0, combo=0, kills=0;
+let playerLv=1, playerExp=0, playerExpMax=100;
+let comboTimer=null, locked=false;
 
 function initGame(){{
   document.getElementById('allClear').classList.remove('show');
-  stage=0; totalDmg=0; combo=0; caught=0;
+  stage=0; totalDmg=0; combo=0; kills=0;
+  playerLv=1; playerExp=0; playerExpMax=100;
+  updatePlayerStat();
   loadMonster();
 }}
 
 function loadMonster(){{
   locked=false;
-  const m = MONSTERS[stage];
-  hp=m.hp; maxHp=m.hp;
+  const m=MONSTERS[stage];
+  mHp=m.hp; mMaxHp=m.hp;
 
-  document.getElementById('monsterName').textContent = m.name;
-  document.getElementById('hpCur').textContent = hp;
-  document.getElementById('hpMax').textContent = maxHp;
-  document.getElementById('hpBar').style.width = '100%';
-  document.getElementById('hpBar').className = 'hp-fill';
-  document.getElementById('stageBadge').textContent = `STAGE ${{stage+1}} / ${{MONSTERS.length}}`;
-  document.getElementById('monsterSay').textContent = '👆 탭해서 공격하거나 아래 스킬을 사용하세요!';
+  document.getElementById('mName').textContent=m.name;
+  document.getElementById('mHpFill').style.width='100%';
+  document.getElementById('stageTxt').textContent=`STAGE ${{stage+1}} / ${{MONSTERS.length}}`;
+  document.getElementById('stageSubTxt').textContent=`HP ${{m.hp}} | EXP +${{m.exp}}`;
+  document.getElementById('sayBubble').textContent='👆 몬스터를 클릭하거나 스킬을 사용하세요!';
+  document.getElementById('clearOv').classList.remove('show');
 
-  const body = document.getElementById('monsterBody');
-  if(m.isBoss && BOSS_IMG){{
-    body.innerHTML = BOSS_IMG;
-    body.classList.add('boss-mode');
+  const sp=document.getElementById('mSprite');
+  sp.classList.remove('boss-img');
+  if(m.isBoss && BOSS_IMG_CSS){{
+    sp.textContent='';
+    sp.classList.add('boss-img');
+    sp.style.cssText += BOSS_IMG_CSS;
   }} else {{
-    body.innerHTML = `<span id="monsterEmoji">${{m.emoji}}</span>`;
-    body.classList.remove('boss-mode');
-    body.style.borderColor = m.color;
-    body.style.boxShadow = `0 0 20px ${{m.color}}44`;
+    sp.style.cssText='';
+    sp.textContent=m.emoji;
   }}
-  document.querySelector('.monster-glow').style.boxShadow = `0 0 50px ${{m.color}}44`;
-
-  document.getElementById('clearOverlay').classList.remove('show');
   updateStats();
 }}
 
-function dealDamage(dmg){{
+function dealDamage(base){{
   if(locked) return;
-  const isCrit = Math.random() < 0.15;
-  const finalDmg = isCrit ? Math.floor(dmg*2) : dmg;
+  const isCrit=Math.random()<0.18;
+  const dmg=isCrit?Math.floor(base*(1.8+Math.random()*.6)):base;
 
-  hp = Math.max(0, hp - finalDmg);
-  totalDmg += finalDmg;
+  mHp=Math.max(0,mHp-dmg);
+  totalDmg+=dmg;
   combo++;
   clearTimeout(comboTimer);
-  comboTimer = setTimeout(()=>{{ combo=0; updateStats(); }}, 1800);
+  comboTimer=setTimeout(()=>{{combo=0;updateStats();}},2000);
 
-  spawnDmg(finalDmg, isCrit);
-  shakeMonster();
-  sayReaction();
-  updateHp();
+  animPlayer();
+  hitMonster();
+  spawnDmg(dmg,isCrit);
+  updateMHp();
   updateStats();
+  sayReact();
 
-  if(hp <= 0){{ locked=true; setTimeout(showClear, 400); }}
+  if(mHp<=0){{locked=true;setTimeout(()=>onKill(),350);}}
 }}
 
-function attack(dmg){{ dealDamage(dmg); }}
-function useSkill(dmg, icon){{ dealDamage(dmg); }}
+function attack(d){{dealDamage(d);}}
+function useSkill(d){{dealDamage(d);}}
 
-function updateHp(){{
-  const pct = (hp/maxHp)*100;
-  const bar = document.getElementById('hpBar');
-  bar.style.width = pct+'%';
-  bar.className = 'hp-fill' + (pct<25?' danger':(pct<50?' warning':''));
-  document.getElementById('hpCur').textContent = hp;
+function animPlayer(){{
+  const p=document.getElementById('player');
+  p.classList.remove('attack');void p.offsetWidth;p.classList.add('attack');
+  setTimeout(()=>p.classList.remove('attack'),380);
+}}
+
+function hitMonster(){{
+  const s=document.getElementById('mSprite');
+  s.classList.remove('hit');void s.offsetWidth;s.classList.add('hit');
+  setTimeout(()=>s.classList.remove('hit'),380);
+}}
+
+function updateMHp(){{
+  const pct=(mHp/mMaxHp)*100;
+  const fill=document.getElementById('mHpFill');
+  fill.style.width=pct+'%';
+  fill.style.background=pct<25?'linear-gradient(90deg,#7f1d1d,#ef4444)':
+                         pct<50?'linear-gradient(90deg,#92400e,#f59e0b)':
+                                'linear-gradient(90deg,#ef4444,#ff6b6b)';
+}}
+
+function spawnDmg(dmg,isCrit){{
+  const world=document.getElementById('world');
+  const el=document.createElement('div');
+  el.className='dmg '+(isCrit?'c':'n');
+  el.textContent=isCrit?'💥'+dmg:''+dmg;
+  el.style.right=(30+Math.random()*80)+'px';
+  el.style.bottom=(80+Math.random()*80)+'px';
+  world.appendChild(el);
+  setTimeout(()=>el.remove(),950);
+}}
+
+function spawnLoot(){{
+  const world=document.getElementById('world');
+  for(let i=0;i<3;i++){{
+    setTimeout(()=>{{
+      const el=document.createElement('div');
+      el.className='loot';
+      el.textContent=LOOTS[Math.floor(Math.random()*LOOTS.length)];
+      el.style.right=(50+Math.random()*100)+'px';
+      el.style.bottom='80px';
+      world.appendChild(el);
+      setTimeout(()=>el.remove(),1500);
+    }},i*120);
+  }}
+}}
+
+function sayReact(){{
+  const s=MONSTERS[stage].says;
+  document.getElementById('sayBubble').textContent=s[Math.floor(Math.random()*s.length)];
+}}
+
+function onKill(){{
+  kills++;
+  spawnLoot();
+  gainExp(MONSTERS[stage].exp);
+
+  const isFinal=stage===MONSTERS.length-1;
+  document.getElementById('clearEm').textContent=isFinal?'🏆':'✨';
+  document.getElementById('clearTtl').textContent=isFinal?`${{MONSTERS[stage].name}} 처치!`:`${{MONSTERS[stage].name}} 처치!`;
+  document.getElementById('clearSub').textContent=isFinal
+    ?`전설의 보스를 쓰러뜨렸습니다! 총 데미지: ${{totalDmg.toLocaleString()}}`
+    :`EXP +${{MONSTERS[stage].exp}} 획득!`;
+  const btn=document.getElementById('nextBtn');
+  if(isFinal){{ btn.textContent='🏆 결과 보기'; btn.onclick=showAllClear; }}
+  else{{ btn.textContent='다음 스테이지 ▶'; btn.onclick=nextMonster; }}
+  document.getElementById('clearOv').classList.add('show');
+  updateStats();
+}}
+
+function gainExp(amount){{
+  playerExp+=amount;
+  while(playerExp>=playerExpMax){{
+    playerExp-=playerExpMax;
+    playerLv++;
+    playerExpMax=Math.floor(playerExpMax*1.4);
+  }}
+  updatePlayerStat();
+}}
+
+function updatePlayerStat(){{
+  document.getElementById('lvBadge').textContent=`Lv.${{playerLv}}`;
+  const pct=(playerExp/playerExpMax)*100;
+  document.getElementById('expFill').style.width=pct+'%';
+  const hp=Math.min(100,100+playerLv*10);
+  document.getElementById('playerHp').textContent=hp;
 }}
 
 function updateStats(){{
-  document.getElementById('totalDmg').textContent = totalDmg.toLocaleString();
-  document.getElementById('comboDisplay').textContent = combo>1?combo+'x':combo;
-  document.getElementById('caughtCount').textContent = caught;
+  document.getElementById('sDmg').textContent=totalDmg.toLocaleString();
+  document.getElementById('sCombo').textContent=combo>1?combo+'x':combo;
+  document.getElementById('sKills').textContent=kills;
 }}
 
-function spawnDmg(dmg, isCrit){{
-  const arena = document.getElementById('monsterArena');
-  const el = document.createElement('div');
-  el.className = 'dmg-pop ' + (isCrit?'crit':'normal');
-  el.textContent = (isCrit?'💥CRIT! ':'-') + dmg;
-  el.style.left = (20+Math.random()*55)+'%';
-  el.style.top  = (10+Math.random()*40)+'%';
-  arena.appendChild(el);
-  setTimeout(()=>el.remove(), 900);
-}}
-
-function shakeMonster(){{
-  const b = document.getElementById('monsterBody');
-  b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
-  setTimeout(()=>b.classList.remove('shake'), 380);
-}}
-
-function sayReaction(){{
-  const m = MONSTERS[stage];
-  const s = m.says;
-  document.getElementById('monsterSay').textContent = s[Math.floor(Math.random()*s.length)];
-}}
-
-function showClear(){{
-  caught++;
-  const isFinal = stage === MONSTERS.length-1;
-  const overlay = document.getElementById('clearOverlay');
-  document.getElementById('clearEmoji').textContent = isFinal ? '🏆' : '✨';
-  document.getElementById('clearTitle').textContent  = isFinal ? '최종 보스 처치!' : '처치!';
-  document.getElementById('clearSub').textContent    = isFinal
-    ? `총 데미지: ${{totalDmg.toLocaleString()}} | ${{MONSTERS.length}}마리 전부 처치!`
-    : `${{MONSTERS[stage].name}} 처치! 다음 몬스터 도전!`;
-
-  if(isFinal){{
-    overlay.querySelector('.next-btn').textContent = '🏆 결과 보기';
-    overlay.querySelector('.next-btn').onclick = showAllClear;
-  }} else {{
-    overlay.querySelector('.next-btn').textContent = '다음 몬스터 ▶';
-    overlay.querySelector('.next-btn').onclick = nextMonster;
-  }}
-  overlay.classList.add('show');
-  updateStats();
-}}
-
-function nextMonster(){{
-  stage++;
-  loadMonster();
-}}
+function nextMonster(){{ stage++; loadMonster(); }}
 
 function showAllClear(){{
-  document.getElementById('clearOverlay').classList.remove('show');
-  document.getElementById('finalDmg').textContent = totalDmg.toLocaleString();
+  document.getElementById('clearOv').classList.remove('show');
+  document.getElementById('acDmg').textContent=totalDmg.toLocaleString();
   document.getElementById('allClear').classList.add('show');
 }}
 
@@ -572,7 +795,7 @@ initGame();
 </script>
 </body>
 </html>"""
-        components.html(game_html, height=680, scrolling=False)
+        components.html(game_html, height=760, scrolling=False)
 
 # ────────────────────────────────────────
 # TAB 3 — 대화하기 (native Streamlit streaming)
