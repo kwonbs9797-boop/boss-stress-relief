@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 import base64
 import anthropic
+import random
 
 st.set_page_config(
     page_title="😤 상사 처단 센터",
@@ -880,15 +881,37 @@ with tab3:
                 st.write(msg_to_send)
             st.session_state.chat_history.append({"role": "user", "content": msg_to_send})
 
+            # 대화 횟수에 따라 상사가 점점 무너지도록
+            turn = len(st.session_state.chat_history) // 2
+            moods = [
+                ("권위적·냉소적", "직원을 무시하고 권위를 내세우며 반박"),
+                ("방어적·변명", "잘못을 인정 안 하고 핑계를 댐"),
+                ("당황·짜증", "말문이 막히지만 억지로 우기는 척"),
+                ("꼬리내리는 척·위협", "잘못인 척하다 갑자기 협박으로 선회"),
+                ("분노·자기연민", "억울하다고 호소하며 큰 소리를 침"),
+                ("수세·횡설수설", "논리가 무너져서 앞뒤가 안 맞는 말을 함"),
+            ]
+            mood_label, mood_desc = moods[min(turn, len(moods)-1)]
+            forbidden = []
+            for m in st.session_state.chat_history:
+                if m["role"] == "assistant" and len(m["content"]) < 60:
+                    forbidden.append(m["content"][:30])
+            forbidden_str = " / ".join(forbidden[-3:]) if forbidden else "없음"
+
             system_prompt = (
-                f'당신은 "{st.session_state.boss_name}"이라는 상사 캐릭터입니다. '
-                f'직급/특징: "{st.session_state.boss_title}".\n'
-                "당신은 전형적인 한국 꼰대 상사로 직원들에게 억압적이고 부당하게 대했습니다.\n"
-                "지금 직원이 화풀이를 하러 왔습니다.\n"
-                "- 처음엔 권위적으로 반응하다가 점점 당황하거나 변명하거나 꼬리내리세요\n"
-                "- 가끔 잘못을 인정하는 척하다가 다시 변명하세요\n"
-                "- 욕설은 직접 쓰지 않되 빈정대거나 불쾌한 말을 하세요\n"
-                "- 1-3문장으로 짧고 임팩트 있게 한국어로 답하세요"
+                f'당신은 "{st.session_state.boss_name}"({st.session_state.boss_title})입니다.\n'
+                f'현재 감정 상태: [{mood_label}] — {mood_desc}\n'
+                f'현재 대화 {turn+1}번째. 대화가 길어질수록 점점 더 궁지에 몰리고 무너져 가세요.\n\n'
+                "## 성격\n"
+                "- 전형적인 한국 꼰대 상사. 야근·보고서·회의 강요, 공 가로채기, 갑질이 특기\n"
+                "- 지적당하면 처음엔 권위로 눌러치다가 점점 당황하고 자기모순에 빠짐\n"
+                "- 절대 완전히 사과하지 않음. 인정하는 척하다 반드시 뒤집음\n\n"
+                "## 답변 규칙\n"
+                "- 반드시 직원의 이번 말 내용에 구체적으로 반응 (야근 언급 → 야근 관련 답, 월급 → 월급 관련 답)\n"
+                "- 매번 다른 표현 사용. 이전에 한 말 절대 반복 금지\n"
+                f"- 특히 이 표현들 재사용 금지: {forbidden_str}\n"
+                "- 비꼬기·억울함·협박·자기합리화 등 다양한 반응 섞기\n"
+                "- 욕설 없이 1~2문장. 짧고 임팩트 있게. 반드시 한국어\n"
             )
 
             def stream_boss():
