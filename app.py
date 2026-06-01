@@ -146,17 +146,22 @@ if not st.session_state.auth:
     st.stop()
 
 # ════════════════════════════════════════
+# API 키 — secrets에서 직접 읽기 (세션 무관)
+# ════════════════════════════════════════
+def get_api_key():
+    try:
+        return st.secrets["anthropic_api_key"]
+    except Exception:
+        return ""
+
+# ════════════════════════════════════════
 # 세션 상태 초기화
 # ════════════════════════════════════════
-# secrets.toml에서 API 키 자동 로드
-_default_api_key = st.secrets.get("anthropic_api_key", "") if hasattr(st, "secrets") else ""
-
 for k, v in {
     "boss_name": "",
     "boss_title": "",
     "boss_img_b64": None,
     "chat_history": [],
-    "api_key": _default_api_key,
     "game_ready": False,
 }.items():
     if k not in st.session_state:
@@ -451,8 +456,6 @@ with tab3:
 
         st.divider()
 
-        if not st.session_state.api_key:
-            st.warning("💡 **상사 설정** 탭에서 Anthropic API 키를 입력해야 대화가 가능합니다.")
 
         # 빠른 메시지 버튼
         QUICK = [
@@ -491,52 +494,48 @@ with tab3:
         msg_to_send = pending or user_input
 
         if msg_to_send:
-            if not st.session_state.api_key:
-                st.error("❌ 상사 설정 탭에서 API 키를 먼저 입력해주세요!")
-            else:
-                with st.chat_message("user", avatar="🧑‍💼"):
-                    st.write(msg_to_send)
-                st.session_state.chat_history.append({"role": "user", "content": msg_to_send})
+            with st.chat_message("user", avatar="🧑‍💼"):
+                st.write(msg_to_send)
+            st.session_state.chat_history.append({"role": "user", "content": msg_to_send})
 
-                system_prompt = (
-                    f'당신은 "{st.session_state.boss_name}"이라는 상사 캐릭터입니다. '
-                    f'직급/특징: "{st.session_state.boss_title}".\n'
-                    "당신은 전형적인 한국 꼰대 상사로 직원들에게 억압적이고 부당하게 대했습니다.\n"
-                    "지금 직원이 화풀이를 하러 왔습니다.\n"
-                    "- 처음엔 권위적으로 반응하다가 점점 당황하거나 변명하거나 꼬리내리세요\n"
-                    "- 가끔 잘못을 인정하는 척하다가 다시 변명하세요\n"
-                    "- 욕설은 직접 쓰지 않되 빈정대거나 불쾌한 말을 하세요\n"
-                    "- 1-3문장으로 짧고 임팩트 있게 한국어로 답하세요"
-                )
+            system_prompt = (
+                f'당신은 "{st.session_state.boss_name}"이라는 상사 캐릭터입니다. '
+                f'직급/특징: "{st.session_state.boss_title}".\n'
+                "당신은 전형적인 한국 꼰대 상사로 직원들에게 억압적이고 부당하게 대했습니다.\n"
+                "지금 직원이 화풀이를 하러 왔습니다.\n"
+                "- 처음엔 권위적으로 반응하다가 점점 당황하거나 변명하거나 꼬리내리세요\n"
+                "- 가끔 잘못을 인정하는 척하다가 다시 변명하세요\n"
+                "- 욕설은 직접 쓰지 않되 빈정대거나 불쾌한 말을 하세요\n"
+                "- 1-3문장으로 짧고 임팩트 있게 한국어로 답하세요"
+            )
 
-                def stream_boss():
-                    client = anthropic.Anthropic(api_key=st.session_state.api_key)
-                    with client.messages.stream(
-                        model="claude-sonnet-4-6",
-                        max_tokens=300,
-                        system=system_prompt,
-                        messages=st.session_state.chat_history,
-                    ) as stream:
-                        for text in stream.text_stream:
-                            yield text
+            def stream_boss():
+                client = anthropic.Anthropic(api_key=get_api_key())
+                with client.messages.stream(
+                    model="claude-sonnet-4-6",
+                    max_tokens=300,
+                    system=system_prompt,
+                    messages=st.session_state.chat_history,
+                ) as stream:
+                    for text in stream.text_stream:
+                        yield text
 
-                with st.chat_message("assistant", avatar="😈"):
-                    try:
-                        response_text = st.write_stream(stream_boss())
-                        st.session_state.chat_history.append(
-                            {"role": "assistant", "content": response_text}
-                        )
-                    except Exception as e:
-                        fallbacks = [
-                            "야!! 나한테 그런 말 하면 어떡해!!",
-                            "...그, 그건 내가 좀 심했나... 어쨌든 네 탓이야!!",
-                            "흥!! 말도 안 돼!! 보고서나 다시 써!!",
-                            "그래도 상사한테... 어, 어어... 할 말 없네.",
-                        ]
-                        import random
-                        fallback = random.choice(fallbacks)
-                        st.write(fallback)
-                        st.session_state.chat_history.append(
-                            {"role": "assistant", "content": fallback}
-                        )
-                        st.caption(f"⚠️ API 오류: {e}")
+            with st.chat_message("assistant", avatar="😈"):
+                try:
+                    response_text = st.write_stream(stream_boss())
+                    st.session_state.chat_history.append(
+                        {"role": "assistant", "content": response_text}
+                    )
+                except Exception as e:
+                    fallbacks = [
+                        "야!! 나한테 그런 말 하면 어떡해!!",
+                        "...그, 그건 내가 좀 심했나... 어쨌든 네 탓이야!!",
+                        "흥!! 말도 안 돼!! 보고서나 다시 써!!",
+                        "그래도 상사한테... 어, 어어... 할 말 없네.",
+                    ]
+                    import random
+                    fallback = random.choice(fallbacks)
+                    st.write(fallback)
+                    st.session_state.chat_history.append(
+                        {"role": "assistant", "content": fallback}
+                    )
