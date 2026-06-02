@@ -5,8 +5,8 @@ import anthropic
 import random
 
 st.set_page_config(
-    page_title="😤 상사 처단 센터",
-    page_icon="😤",
+    page_title="👹 데빌 헌터스",
+    page_icon="👹",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
@@ -121,12 +121,12 @@ if "auth" not in st.session_state:
 if not st.session_state.auth:
     st.markdown("""
     <div style="text-align:center; padding: 4rem 0 2rem;">
-      <div style="font-size:5rem; margin-bottom:1rem;">😤</div>
+      <div style="font-size:5rem; margin-bottom:1rem;">👹</div>
       <h1 style="font-family:'Black Han Sans',sans-serif; color:#ff4444;
-                 font-size:2.2rem; letter-spacing:3px; margin-bottom:0.5rem;">
-        상사 처단 센터
+                 font-size:2.4rem; letter-spacing:4px; margin-bottom:0.5rem;">
+        데빌 헌터스
       </h1>
-      <p style="color:#c49a9a;">직장인의 마음의 평화를 위한 가상 스트레스 해소 공간</p>
+      <p style="color:#c49a9a; font-size:.9rem;">악마를 사냥하고 스트레스를 날려버려라</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -135,15 +135,15 @@ if not st.session_state.auth:
         pw = st.text_input(
             "비밀번호",
             type="password",
-            placeholder="🔐 비밀번호 입력...",
+            placeholder="🔑 헌터 코드 입력...",
             label_visibility="collapsed",
         )
-        if st.button("🚪 입장하기", use_container_width=True, type="primary"):
+        if st.button("⚔️ 사냥 시작", use_container_width=True, type="primary"):
             if pw == PASSWORD:
                 st.session_state.auth = True
                 st.rerun()
             elif pw:
-                st.error("❌ 비밀번호가 틀렸습니다")
+                st.error("❌ 헌터 코드가 틀렸습니다")
     st.stop()
 
 # ════════════════════════════════════════
@@ -176,12 +176,12 @@ with col_title:
     st.markdown("""
     <div style="text-align:center; padding: 1.5rem 0 0.5rem; border-bottom: 1px solid #3a1818; margin-bottom:1rem;">
       <h1 style="font-family:'Black Han Sans',sans-serif; color:#ff4444;
-                 font-size:2.2rem; letter-spacing:2px;
+                 font-size:2.2rem; letter-spacing:3px;
                  text-shadow: 0 0 30px rgba(255,68,68,0.35); margin:0;">
-        😤 상사 처단 센터
+        👹 데빌 헌터스
       </h1>
       <p style="color:#c49a9a; font-size:0.9rem; margin-top:0.4rem;">
-        직장인의 마음의 평화를 위한 가상 스트레스 해소 공간
+        악마를 사냥하고 스트레스를 날려버려라
       </p>
     </div>
     """, unsafe_allow_html=True)
@@ -196,7 +196,7 @@ with col_logout:
 # ════════════════════════════════════════
 # 탭
 # ════════════════════════════════════════
-tab1, tab2, tab3 = st.tabs(["👤 상사 설정", "🔥 고문하기", "💬 대화하기"])
+tab1, tab2, tab3 = st.tabs(["👹 악마 등록", "⚔️ 사냥하기", "💬 도발하기"])
 
 # ────────────────────────────────────────
 # TAB 1 — 상사 설정
@@ -204,9 +204,9 @@ tab1, tab2, tab3 = st.tabs(["👤 상사 설정", "🔥 고문하기", "💬 대
 with tab1:
     st.divider()
 
-    st.markdown("#### 📸 상사 얼굴 사진")
+    st.markdown("#### 📸 악마 사진 등록")
     uploaded = st.file_uploader(
-        "상사 얼굴",
+        "악마 사진",
         type=["jpg", "jpeg", "png", "gif", "webp"],
         label_visibility="collapsed",
     )
@@ -218,18 +218,18 @@ with tab1:
     if st.session_state.boss_img_b64:
         st.image(st.session_state.boss_img_b64, width=90)
 
-    st.markdown("#### 📝 상사 정보")
+    st.markdown("#### 📝 악마 정보")
     col1, col2 = st.columns(2)
     with col1:
         name_in = st.text_input(
-            "상사 이름 (별명 가능)",
-            placeholder="예: 이 과장, 찐따 팀장...",
+            "악마 이름 (별명 가능)",
+            placeholder="예: 이 과장, 야근 강요 마귀...",
             max_chars=20,
             value=st.session_state.boss_name,
         )
     with col2:
         title_in = st.text_input(
-            "직급 / 특징",
+            "악마 특성",
             placeholder="예: 매일 야근 강요하는 꼰대...",
             max_chars=40,
             value=st.session_state.boss_title,
@@ -239,8 +239,8 @@ with tab1:
     st.session_state.boss_title = title_in
 
     st.markdown("<br>", unsafe_allow_html=True)
-    if st.button("🔥 분풀이 시작하기", use_container_width=True, type="primary"):
-        st.session_state.boss_name = name_in or "이 과장"
+    if st.button("⚔️ 사냥 시작하기", use_container_width=True, type="primary"):
+        st.session_state.boss_name = name_in or "야근 악마"
         st.session_state.boss_title = title_in or "직장 원수"
         st.session_state.game_ready = True
         st.session_state.chat_history = []
@@ -250,12 +250,12 @@ with tab1:
         <div style="background:#2a1010;border:1px solid #ff4444;border-radius:12px;
                     padding:1rem;text-align:center;margin-top:1rem;">
           <span style="color:#ff4444;font-size:1.1rem;font-weight:700;">
-            ✅ 설정 완료!
+            ✅ 악마 등록 완료!
           </span>
           <br>
           <span style="color:#c49a9a;font-size:.9rem;">
-            위의 <b style="color:#ff4444;">🔥 고문하기</b> 탭이나
-            <b style="color:#ff4444;">💬 대화하기</b> 탭을 클릭하세요
+            위의 <b style="color:#ff4444;">⚔️ 사냥하기</b> 탭이나
+            <b style="color:#ff4444;">💬 도발하기</b> 탭을 클릭하세요
           </span>
         </div>
         """, unsafe_allow_html=True)
@@ -268,8 +268,8 @@ with tab2:
         st.markdown("""
         <div style="text-align:center; padding:3rem; color:#c49a9a;">
           <div style="font-size:3rem">👆</div>
-          <p>먼저 <b>상사 설정</b> 탭에서 상사를 등록하고<br>
-          <b>분풀이 시작하기</b>를 눌러주세요!</p>
+          <p>먼저 <b>악마 등록</b> 탭에서 악마를 등록하고<br>
+          <b>사냥 시작하기</b>를 눌러주세요!</p>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -610,7 +610,7 @@ body{{font-family:'Noto Sans KR',sans-serif;background:#1a0e2e;color:#f0eaff;pad
   <div class="ac-stars">⭐⭐⭐⭐⭐</div>
   <div class="ac-title">ALL CLEAR!</div>
   <div class="ac-score">총 데미지 <span id="acDmg" style="color:#ffd700;font-weight:900;">0</span></div>
-  <div style="color:#888;font-size:.85rem;margin-top:-.3rem;">직장 스트레스 완전 해소 🎉</div>
+  <div style="color:#888;font-size:.85rem;margin-top:-.3rem;">악마 사냥 완전 성공 🎉</div>
   <button class="replay-btn" onclick="initGame()">🔄 다시 하기</button>
 </div>
 
@@ -806,8 +806,8 @@ with tab3:
         st.markdown("""
         <div style="text-align:center; padding:3rem; color:#c49a9a;">
           <div style="font-size:3rem">👆</div>
-          <p>먼저 <b>상사 설정</b> 탭에서 상사를 등록하고<br>
-          <b>분풀이 시작하기</b>를 눌러주세요!</p>
+          <p>먼저 <b>악마 등록</b> 탭에서 악마를 등록하고<br>
+          <b>사냥 시작하기</b>를 눌러주세요!</p>
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -833,7 +833,7 @@ with tab3:
             st.markdown(
                 '<span style="background:#2a1010;border:1px solid #ff4444;'
                 'border-radius:20px;padding:.3rem .8rem;color:#ff4444;font-size:.8rem;">'
-                '😤 빡침 상태</span>',
+                '😈 경계 중</span>',
                 unsafe_allow_html=True,
             )
 
@@ -862,7 +862,7 @@ with tab3:
         # 기존 대화 표시
         if not st.session_state.chat_history:
             with st.chat_message("assistant", avatar="😈"):
-                st.write("...(상사가 뚱한 표정으로 앉아있다)")
+                st.write("...(악마가 으르렁거리며 노려보고 있다)")
 
         for msg in st.session_state.chat_history:
             role = msg["role"]
@@ -871,7 +871,7 @@ with tab3:
                 st.write(msg["content"])
 
         # 사용자 입력 받기 (텍스트 입력 or 빠른 메시지)
-        user_input = st.chat_input("하고 싶은 말 마음껏 털어놓으세요... ✍️")
+        user_input = st.chat_input("악마를 도발해보세요... ⚔️")
 
         pending = st.session_state.pop("_pending", None) if "_pending" in st.session_state else None
         msg_to_send = pending or user_input
@@ -899,15 +899,15 @@ with tab3:
             forbidden_str = " / ".join(forbidden[-3:]) if forbidden else "없음"
 
             system_prompt = (
-                f'당신은 "{st.session_state.boss_name}"({st.session_state.boss_title})입니다.\n'
+                f'당신은 "{st.session_state.boss_name}"({st.session_state.boss_title})이라는 악마 캐릭터입니다.\n'
                 f'현재 감정 상태: [{mood_label}] — {mood_desc}\n'
-                f'현재 대화 {turn+1}번째. 대화가 길어질수록 점점 더 궁지에 몰리고 무너져 가세요.\n\n'
-                "## 성격\n"
-                "- 전형적인 한국 꼰대 상사. 야근·보고서·회의 강요, 공 가로채기, 갑질이 특기\n"
-                "- 지적당하면 처음엔 권위로 눌러치다가 점점 당황하고 자기모순에 빠짐\n"
-                "- 절대 완전히 사과하지 않음. 인정하는 척하다 반드시 뒤집음\n\n"
+                f'현재 대화 {turn+1}번째. 도발이 쌓일수록 점점 더 궁지에 몰리고 무너져 가세요.\n\n'
+                "## 캐릭터 설정\n"
+                "- 직장인들을 괴롭히는 악마. 야근 강요, 공 가로채기, 갑질이 특기인 직장 내 악마 존재\n"
+                "- 도발당하면 처음엔 위압적으로 나오다가 점점 당황하고 자기모순에 빠짐\n"
+                "- 절대 완전히 굴복하지 않음. 인정하는 척하다 반드시 뒤집음\n\n"
                 "## 답변 규칙\n"
-                "- 반드시 직원의 이번 말 내용에 구체적으로 반응 (야근 언급 → 야근 관련 답, 월급 → 월급 관련 답)\n"
+                "- 반드시 상대방의 이번 말 내용에 구체적으로 반응\n"
                 "- 매번 다른 표현 사용. 이전에 한 말 절대 반복 금지\n"
                 f"- 특히 이 표현들 재사용 금지: {forbidden_str}\n"
                 "- 비꼬기·억울함·협박·자기합리화 등 다양한 반응 섞기\n"
